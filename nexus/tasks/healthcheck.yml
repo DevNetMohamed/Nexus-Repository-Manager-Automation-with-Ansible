@@ -5,15 +5,27 @@
 - name: Verify Nexus service is running
   ansible.builtin.assert:
     that:
-      - ansible_facts.services["nexus.service"].state == "running"
-    fail_msg: "Nexus service is not running."
+      - "'nexus.service' in ansible_facts.services"
+      - ansible_facts.services['nexus.service'].state == 'running'
+    fail_msg: >-
+      Nexus service is not running. Current state:
+      {{ ansible_facts.services['nexus.service'].state
+         if 'nexus.service' in ansible_facts.services
+         else 'unit not found' }}
     success_msg: "Nexus service is running."
+  retries: 5
+  delay: 10
+  register: nexus_service_check
+  until: nexus_service_check is succeededng."
 
 - name: Check Nexus REST status endpoint
   ansible.builtin.uri:
     url: "http://127.0.0.1:{{ nexus_port }}/service/rest/v1/status"
     status_code: 200
   register: nexus_health_status
+  retries: 20
+  delay: 15
+  until: nexus_health_status.status == 200
   changed_when: false
 
 - name: Check available disk space on data directory
@@ -25,6 +37,6 @@
 - name: Report health check summary
   ansible.builtin.debug:
     msg:
-      - "Service state: {{ nexus_service_state.stdout }}"
+      - "Service state: {{ ansible_facts.services['nexus.service'].state }}"
       - "REST status: {{ nexus_health_status.status }}"
       - "Disk usage: {{ nexus_disk_usage.stdout_lines }}"
