@@ -2,9 +2,9 @@
 - name: Converge
   hosts: all
   become: true
+
   vars:
     nexus_admin_password: "Admin@123456"
-  tasks:
-    - name: Include current role
-      ansible.builtin.include_role:
-        name: .
+
+  roles:
+    - role: nexus
