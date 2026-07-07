@@ -17,9 +17,10 @@ platforms:
 
 provisioner:
   name: ansible
-  role_name_check: false
-  env:
-    ANSIBLE_ROLES_PATH: "${MOLECULE_PROJECT_DIRECTORY}/.."
+  config_options:
+    defaults:
+      roles_path:
+        - ../../
 
   playbooks:
     converge: converge.yml
