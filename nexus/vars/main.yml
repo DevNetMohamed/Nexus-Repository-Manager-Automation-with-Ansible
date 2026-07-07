@@ -1,0 +1,2 @@
+---
+nexus_download_dest: "{{ dir_name }}/nexus-{{ nexus_version }}.tar.gz"

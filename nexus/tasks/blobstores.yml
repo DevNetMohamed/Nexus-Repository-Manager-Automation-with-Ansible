@@ -1,0 +1,31 @@
+---
+- name: Get existing blob stores
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ nexus_port }}/service/rest/v1/blobstores"
+    method: GET
+    user: admin
+    password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    return_content: true
+    status_code: 200
+  register: nexus_existing_blobstores
+
+- name: Create file-based blob stores
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ nexus_port }}/service/rest/v1/blobstores/file"
+    method: POST
+    user: admin
+    password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      path: "{{ item.path }}"
+    status_code:
+      - 200
+      - 201
+      - 400
+  loop: "{{ nexus_blobstores }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.name not in (nexus_existing_blobstores.json | map(attribute='name') | list)

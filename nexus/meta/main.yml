@@ -1,0 +1,22 @@
+---
+galaxy_info:
+  namespace: devnetmohamed
+  role_name: nexus
+  author: Mohamed Adel
+  description: "Production-ready Ansible role for fully automated Nexus Repository Manager deployment and configuration"
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - all
+  galaxy_tags:
+    - nexus
+    - sonatype
+    - devops
+    - artifactrepository
+    - maven
+    - docker
+    - npm
+
+dependencies: []

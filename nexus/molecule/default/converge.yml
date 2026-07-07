@@ -1,0 +1,8 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  vars:
+    nexus_admin_password: "Admin@123456"
+  roles:
+    - role: nexus

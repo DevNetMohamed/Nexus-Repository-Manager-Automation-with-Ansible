@@ -1,0 +1,89 @@
+---
+- name: Create Maven hosted repositories
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ nexus_port }}/service/rest/v1/repositories/maven/hosted"
+    method: POST
+    user: admin
+    password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      online: true
+      storage:
+        blobStoreName: "{{ item.blob_store }}"
+        strictContentTypeValidation: true
+        writePolicy: "{{ item.write_policy }}"
+      cleanup: null
+      component:
+        proprietaryComponents: true
+      maven:
+        versionPolicy: "{{ item.version_policy }}"
+        layoutPolicy: "{{ item.layout_policy }}"
+    status_code:
+      - 201
+      - 400
+  loop: "{{ nexus_maven_repos }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Create Docker hosted repositories
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ nexus_port }}/service/rest/v1/repositories/docker/hosted"
+    method: POST
+    user: admin
+    password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      online: true
+      storage:
+        blobStoreName: "{{ item.blob_store }}"
+        strictContentTypeValidation: true
+      cleanup: null
+      docker:
+        v1Enabled: "{{ item.v1_enabled | default(false) }}"
+        forceBasicAuth: true
+        httpPort: "{{ item.http_port | default(omit) }}"
+        httpsPort: "{{ item.https_port | default(omit) }}"
+    status_code:
+      - 201
+      - 400
+  loop: "{{ nexus_docker_repos }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Create npm hosted repositories
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ nexus_port }}/service/rest/v1/repositories/npm/hosted"
+    method: POST
+    user: admin
+    password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      online: true
+      storage:
+        blobStoreName: "{{ item.blob_store }}"
+        strictContentTypeValidation: true
+        writePolicy: "{{ item.write_policy | default('ALLOW') }}"
+      cleanup: null
+    status_code:
+      - 201
+      - 400
+  loop: "{{ nexus_npm_repos }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Get existing repositories (verification)
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ nexus_port }}/service/rest/v1/repositories"
+    method: GET
+    user: admin
+    password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    return_content: true
+    status_code: 200
+  register: nexus_repositories_result

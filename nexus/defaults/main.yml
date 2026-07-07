@@ -1,0 +1,87 @@
+---
+nexus_user: nexus
+nexus_group: nexus
+dir_name: /app
+nexus_home: "{{ dir_name }}/nexus"
+nexus_data_dir: "{{ dir_name }}/sonatype-work/nexus3"
+# --- Dynamic version / download ---
+nexus_version: "3.83.1-03"
+nexus_download_url: "https://download.sonatype.com/nexus/3/nexus-{{ nexus_version }}-linux-x86_64.tar.gz"
+# --- Dynamic port ---
+nexus_port: 8081
+# --- Dynamic JVM memory ---
+nexus_xms: 2g
+nexus_xmx: 2g
+nexus_direct_memory: 1g
+# --- Admin password automation ---
+nexus_admin_default_password_file: "{{ nexus_data_dir }}/admin.password"
+nexus_admin_password: "Admin@123456"
+# --- Anonymous access toggle ---
+nexus_anonymous_access: false
+# --- Blob stores ---
+nexus_blobstores:
+  - name: default
+    path: default
+# --- Repositories ---
+nexus_maven_repos:
+  - name: maven-releases
+    blob_store: default
+    write_policy: ALLOW
+    version_policy: RELEASE
+    layout_policy: STRICT
+nexus_docker_repos: []
+# Example:
+# nexus_docker_repos:
+#   - name: docker-hosted
+#     blob_store: default
+#     http_port: 8082
+#     https_port: null
+#     v1_enabled: false
+
+nexus_npm_repos: []
+# Example:
+# nexus_npm_repos:
+#   - name: npm-hosted
+#     blob_store: default
+#     write_policy: ALLOW
+
+# --- Roles & Users & Privileges ---
+nexus_roles: []
+# Example:
+# nexus_roles:
+#   - id: developers
+#     name: Developers
+#     description: "Read/write access to maven-releases"
+#     privileges:
+#       - nx-repository-view-maven2-maven-releases-*
+#     roles: []
+
+nexus_users: []
+# Example:
+# nexus_users:
+#   - username: ci-bot
+#     password: "ChangeMe!"
+#     first_name: CI
+#     last_name: Bot
+#     email: ci-bot@example.com
+#     roles:
+#       - developers
+
+# --- SSL / HTTPS ---
+nexus_ssl_enabled: false
+nexus_ssl_port: 8443
+nexus_ssl_cert_src: "" # path on control node to PEM cert
+nexus_ssl_key_src: "" # path on control node to PEM private key
+nexus_ssl_keystore_password: "changeit"
+nexus_ssl_keystore_path: "{{ nexus_data_dir }}/keystores/nexus.jks"
+
+# --- Backup / Restore ---
+nexus_backup_dir: /app/backups/nexus
+nexus_backup_retention_days: 7
+# Set nexus_action to "backup" or "restore" and run with --tags backup / --tags restore
+nexus_action: ""
+nexus_restore_archive: "" # path to a backup .tar.gz to restore from
+
+# --- Health check ---
+nexus_healthcheck_retries: 20
+nexus_healthcheck_delay: 15

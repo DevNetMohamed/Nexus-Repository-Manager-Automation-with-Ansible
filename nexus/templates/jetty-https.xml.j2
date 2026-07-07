@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure_9_3.dtd">
+<!-- Managed by Ansible: enables HTTPS on {{ nexus_ssl_port }} -->
+<Configure id="Server" class="org.eclipse.jetty.server.Server">
+  <New id="sslContextFactory" class="org.eclipse.jetty.util.ssl.SslContextFactory$Server">
+    <Set name="KeyStorePath">{{ nexus_ssl_keystore_path }}</Set>
+    <Set name="KeyStorePassword">{{ nexus_ssl_keystore_password }}</Set>
+    <Set name="KeyManagerPassword">{{ nexus_ssl_keystore_password }}</Set>
+  </New>
+
+  <New id="sslHttpConfig" class="org.eclipse.jetty.server.HttpConfiguration">
+    <Arg><Ref refid="httpConfig"/></Arg>
+    <Call name="addCustomizer">
+      <Arg><New class="org.eclipse.jetty.server.SecureRequestCustomizer"/></Arg>
+    </Call>
+  </New>
+
+  <Call name="addConnector">
+    <Arg>
+      <New class="org.eclipse.jetty.server.ServerConnector">
+        <Arg name="server"><Ref refid="Server"/></Arg>
+        <Arg name="factories">
+          <Array type="org.eclipse.jetty.server.ConnectionFactory">
+            <Item>
+              <New class="org.eclipse.jetty.server.SslConnectionFactory">
+                <Arg name="next">http/1.1</Arg>
+                <Arg name="sslContextFactory"><Ref refid="sslContextFactory"/></Arg>
+              </New>
+            </Item>
+            <Item>
+              <New class="org.eclipse.jetty.server.HttpConnectionFactory">
+                <Arg name="config"><Ref refid="sslHttpConfig"/></Arg>
+              </New>
+            </Item>
+          </Array>
+        </Arg>
+        <Set name="port">{{ nexus_ssl_port }}</Set>
+        <Set name="idleTimeout">30000</Set>
+      </New>
+    </Arg>
+  </Call>
+</Configure>

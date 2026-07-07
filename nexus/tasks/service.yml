@@ -1,0 +1,20 @@
+---
+- name: Install systemd service unit
+  ansible.builtin.template:
+    src: nexus.service.j2
+    dest: /etc/systemd/system/nexus.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart Nexus
+
+- name: Flush handlers so systemd/service changes apply before continuing
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable and start Nexus
+  ansible.builtin.systemd:
+    name: nexus
+    enabled: true
+    state: started

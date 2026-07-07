@@ -1,0 +1,31 @@
+---
+- name: Create dedicated Nexus system user
+  ansible.builtin.user:
+    name: "{{ nexus_user }}"
+    shell: /bin/bash
+    system: true
+    create_home: false
+
+- name: Create sonatype-work/nexus3 data directory
+  ansible.builtin.file:
+    path: "{{ nexus_data_dir }}"
+    state: directory
+    owner: "{{ nexus_user }}"
+    group: "{{ nexus_group }}"
+    mode: "0755"
+    recurse: true
+
+- name: Set ownership of Nexus installation directory
+  ansible.builtin.file:
+    path: "{{ nexus_home }}"
+    owner: "{{ nexus_user }}"
+    group: "{{ nexus_group }}"
+    recurse: true
+
+- name: Set ownership of sonatype-work (first install only)
+  ansible.builtin.file:
+    path: "{{ dir_name }}/sonatype-work"
+    owner: "{{ nexus_user }}"
+    group: "{{ nexus_group }}"
+    recurse: true
+  when: not nexus_install.stat.exists

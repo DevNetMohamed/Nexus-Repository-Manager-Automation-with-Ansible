@@ -1,0 +1,13 @@
+---
+- name: Create base application directory
+  ansible.builtin.file:
+    path: "{{ dir_name }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Check whether Nexus is already installed
+  ansible.builtin.stat:
+    path: "{{ nexus_home }}"
+  register: nexus_install

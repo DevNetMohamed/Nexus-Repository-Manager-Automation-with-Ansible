@@ -1,0 +1,55 @@
+---
+- name: Create backup directory
+  ansible.builtin.file:
+    path: "{{ nexus_backup_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Set backup filename with timestamp
+  ansible.builtin.set_fact:
+    nexus_backup_file: "{{ nexus_backup_dir }}/nexus-backup-{{ ansible_date_time.iso8601_basic_short }}.tar.gz"
+
+- name: Stop Nexus before backup (ensures a consistent snapshot)
+  ansible.builtin.systemd:
+    name: nexus
+    state: stopped
+
+- name: Archive sonatype-work directory
+  community.general.archive:
+    path: "{{ dir_name }}/sonatype-work"
+    dest: "{{ nexus_backup_file }}"
+    format: gz
+    mode: "0640"
+
+- name: Restart Nexus after backup
+  ansible.builtin.systemd:
+    name: nexus
+    state: started
+
+- name: Wait for Nexus to come back online
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: "{{ nexus_port }}"
+    delay: 10
+    timeout: 300
+
+- name: Find backups older than retention period
+  ansible.builtin.find:
+    paths: "{{ nexus_backup_dir }}"
+    patterns: "nexus-backup-*.tar.gz"
+    age: "{{ nexus_backup_retention_days }}d"
+  register: nexus_old_backups
+
+- name: Prune old backups
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ nexus_old_backups.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Report backup location
+  ansible.builtin.debug:
+    msg: "Backup created at {{ nexus_backup_file }}"

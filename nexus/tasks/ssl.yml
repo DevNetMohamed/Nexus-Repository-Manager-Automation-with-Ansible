@@ -1,0 +1,89 @@
+---
+# Configures HTTPS by importing a PEM certificate/key pair into a Java
+# keystore and enabling Jetty's HTTPS connector. Requires
+# nexus_ssl_cert_src and nexus_ssl_key_src to point to files on the
+# control node.
+
+- name: Assert SSL source files are provided
+  ansible.builtin.assert:
+    that:
+      - nexus_ssl_cert_src | length > 0
+      - nexus_ssl_key_src | length > 0
+    fail_msg: "nexus_ssl_cert_src and nexus_ssl_key_src must be set when nexus_ssl_enabled is true"
+
+- name: Create keystores directory
+  ansible.builtin.file:
+    path: "{{ nexus_ssl_keystore_path | dirname }}"
+    state: directory
+    owner: "{{ nexus_user }}"
+    group: "{{ nexus_group }}"
+    mode: "0750"
+
+- name: Copy TLS certificate to target
+  ansible.builtin.copy:
+    src: "{{ nexus_ssl_cert_src }}"
+    dest: "/tmp/nexus_cert.pem"
+    mode: "0600"
+
+- name: Copy TLS private key to target
+  ansible.builtin.copy:
+    src: "{{ nexus_ssl_key_src }}"
+    dest: "/tmp/nexus_key.pem"
+    mode: "0600"
+
+- name: Build a PKCS12 bundle from cert + key
+  ansible.builtin.command:
+    cmd: >
+      openssl pkcs12 -export
+      -in /tmp/nexus_cert.pem
+      -inkey /tmp/nexus_key.pem
+      -out /tmp/nexus.p12
+      -name nexus
+      -password pass:{{ nexus_ssl_keystore_password }}
+    creates: /tmp/nexus.p12
+
+- name: Import PKCS12 bundle into the Java keystore
+  ansible.builtin.command:
+    cmd: >
+      keytool -importkeystore
+      -deststorepass {{ nexus_ssl_keystore_password }}
+      -destkeypass {{ nexus_ssl_keystore_password }}
+      -destkeystore {{ nexus_ssl_keystore_path }}
+      -srckeystore /tmp/nexus.p12
+      -srcstoretype PKCS12
+      -srcstorepass {{ nexus_ssl_keystore_password }}
+      -alias nexus
+      -noprompt
+    creates: "{{ nexus_ssl_keystore_path }}"
+
+- name: Set ownership on the keystore
+  ansible.builtin.file:
+    path: "{{ nexus_ssl_keystore_path }}"
+    owner: "{{ nexus_user }}"
+    group: "{{ nexus_group }}"
+    mode: "0640"
+
+- name: Configure Jetty HTTPS connector
+  ansible.builtin.template:
+    src: jetty-https.xml.j2
+    dest: "{{ nexus_home }}/etc/jetty/jetty-https.xml"
+    owner: "{{ nexus_user }}"
+    group: "{{ nexus_group }}"
+    mode: "0644"
+  notify: Restart Nexus
+
+- name: Enable HTTPS section in nexus.properties
+  ansible.builtin.lineinfile:
+    path: "{{ nexus_home }}/etc/nexus-default.properties"
+    regexp: "^nexus-args="
+    line: "nexus-args=${jetty.etc}/jetty.xml,${jetty.etc}/jetty-http.xml,${jetty.etc}/jetty-requestlog.xml,${jetty.etc}/jetty-https.xml"
+  notify: Restart Nexus
+
+- name: Remove temporary certificate material
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/nexus_cert.pem
+    - /tmp/nexus_key.pem
+    - /tmp/nexus.p12

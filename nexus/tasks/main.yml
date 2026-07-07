@@ -1,0 +1,67 @@
+---
+- name: Install Java
+  ansible.builtin.import_tasks: install.yml
+  tags: [nexus, install]
+
+- name: Prepare directories
+  ansible.builtin.import_tasks: directories.yml
+  tags: [nexus, install]
+
+- name: Download Nexus
+  ansible.builtin.import_tasks: download.yml
+  tags: [nexus, install]
+
+- name: Extract and lay out Nexus
+  ansible.builtin.import_tasks: extract.yml
+  tags: [nexus, install]
+
+- name: Create user and fix ownership
+  ansible.builtin.import_tasks: user.yml
+  tags: [nexus, install]
+
+- name: Configure Nexus (rc, vmoptions, port)
+  ansible.builtin.import_tasks: configure.yml
+  tags: [nexus, configure]
+
+- name: Configure SSL/HTTPS
+  ansible.builtin.import_tasks: ssl.yml
+  tags: [nexus, ssl]
+  when: nexus_ssl_enabled | bool
+
+- name: Install and start the systemd service
+  ansible.builtin.import_tasks: service.yml
+  tags: [nexus, service]
+
+- name: Wait for Nexus and verify it is running
+  ansible.builtin.import_tasks: wait.yml
+  tags: [nexus, healthcheck]
+
+- name: Automate admin password and anonymous access
+  ansible.builtin.import_tasks: admin_password.yml
+  tags: [nexus, admin]
+
+- name: Create blob stores
+  ansible.builtin.import_tasks: blobstores.yml
+  tags: [nexus, repositories]
+
+- name: Create Maven/Docker/npm repositories
+  ansible.builtin.import_tasks: repositories.yml
+  tags: [nexus, repositories]
+
+- name: Create roles, users and privileges
+  ansible.builtin.import_tasks: roles_users.yml
+  tags: [nexus, security]
+
+- name: Run health check
+  ansible.builtin.import_tasks: healthcheck.yml
+  tags: [nexus, healthcheck]
+
+- name: Backup Nexus
+  ansible.builtin.import_tasks: backup.yml
+  tags: [nexus, backup]
+  when: nexus_action == "backup"
+
+- name: Restore Nexus
+  ansible.builtin.import_tasks: restore.yml
+  tags: [nexus, restore]
+  when: nexus_action == "restore"

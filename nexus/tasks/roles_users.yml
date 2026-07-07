@@ -1,0 +1,47 @@
+---
+- name: Create Nexus roles
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ nexus_port }}/service/rest/v1/security/roles"
+    method: POST
+    user: admin
+    password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    body_format: json
+    body:
+      id: "{{ item.id }}"
+      name: "{{ item.name }}"
+      description: "{{ item.description | default('') }}"
+      privileges: "{{ item.privileges | default([]) }}"
+      roles: "{{ item.roles | default([]) }}"
+    status_code:
+      - 200
+      - 201
+      - 400
+  loop: "{{ nexus_roles }}"
+  loop_control:
+    label: "{{ item.id }}"
+
+- name: Create Nexus users and assign roles/privileges
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ nexus_port }}/service/rest/v1/security/users"
+    method: POST
+    user: admin
+    password: "{{ nexus_admin_password }}"
+    force_basic_auth: true
+    body_format: json
+    body:
+      userId: "{{ item.username }}"
+      firstName: "{{ item.first_name | default(item.username) }}"
+      lastName: "{{ item.last_name | default('') }}"
+      emailAddress: "{{ item.email | default(item.username + '@example.com') }}"
+      password: "{{ item.password }}"
+      status: active
+      roles: "{{ item.roles | default([]) }}"
+    status_code:
+      - 200
+      - 201
+      - 400
+  loop: "{{ nexus_users }}"
+  loop_control:
+    label: "{{ item.username }}"
+  no_log: true

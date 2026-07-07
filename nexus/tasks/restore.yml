@@ -1,0 +1,48 @@
+---
+- name: Assert a restore archive was provided
+  ansible.builtin.assert:
+    that:
+      - nexus_restore_archive | length > 0
+    fail_msg: "Set -e nexus_restore_archive=/path/to/backup.tar.gz"
+
+- name: Stop Nexus before restore
+  ansible.builtin.systemd:
+    name: nexus
+    state: stopped
+
+- name: Move existing sonatype-work aside as a safety copy
+  ansible.builtin.command:
+    cmd: >
+      mv {{ dir_name }}/sonatype-work
+      {{ dir_name }}/sonatype-work.bak.{{ ansible_date_time.iso8601_basic_short }}
+  args:
+    removes: "{{ dir_name }}/sonatype-work"
+
+- name: Extract backup archive
+  ansible.builtin.unarchive:
+    src: "{{ nexus_restore_archive }}"
+    dest: "{{ dir_name }}"
+    remote_src: true
+
+- name: Fix ownership after restore
+  ansible.builtin.file:
+    path: "{{ dir_name }}/sonatype-work"
+    owner: "{{ nexus_user }}"
+    group: "{{ nexus_group }}"
+    recurse: true
+
+- name: Start Nexus after restore
+  ansible.builtin.systemd:
+    name: nexus
+    state: started
+
+- name: Wait for Nexus to come back online
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: "{{ nexus_port }}"
+    delay: 10
+    timeout: 300
+
+- name: Report restore completion
+  ansible.builtin.debug:
+    msg: "Restore completed from {{ nexus_restore_archive }}"

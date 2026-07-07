@@ -1,0 +1,24 @@
+---
+- name: Wait for Nexus TCP port to open
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: "{{ nexus_port }}"
+    delay: 20
+    timeout: 300
+
+- name: Verify Nexus REST status endpoint responds
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ nexus_port }}/service/rest/v1/status"
+    status_code: 200
+  register: nexus_status
+  retries: "{{ nexus_healthcheck_retries }}"
+  delay: "{{ nexus_healthcheck_delay }}"
+  until: nexus_status.status == 200
+
+- name: Show Nexus URL
+  ansible.builtin.debug:
+    msg: "Nexus Repository Manager is available at http://localhost:{{ nexus_port }}"
+
+- name: Give Nexus's security/onboarding subsystem a moment to settle
+  ansible.builtin.pause:
+    seconds: 10

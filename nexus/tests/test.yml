@@ -1,0 +1,28 @@
+---
+- name: Test Nexus role
+  hosts: localhost
+  become: true
+  vars:
+    nexus_admin_password: "{{ lookup('env', 'NEXUS_ADMIN_PASSWORD') | default('Admin@123456', true) }}"
+    nexus_anonymous_access: false
+    nexus_docker_repos:
+      - name: docker-hosted
+        blob_store: default
+        http_port: 8082
+        v1_enabled: false
+    nexus_npm_repos:
+      - name: npm-hosted
+        blob_store: default
+    nexus_roles:
+      - id: developers
+        name: Developers
+        description: "Read/write access to maven-releases"
+        privileges:
+          - nx-repository-view-maven2-maven-releases-*
+    nexus_users:
+      - username: ci-bot
+        password: "ChangeMe!123"
+        roles:
+          - developer
+  roles:
+    - nexus

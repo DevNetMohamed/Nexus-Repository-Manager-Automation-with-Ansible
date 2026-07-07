@@ -1,0 +1,6 @@
+---
+- name: Install Java 17 (required by Nexus 3.x)
+  ansible.builtin.apt:
+    name: openjdk-17-jdk
+    state: present
+    update_cache: true

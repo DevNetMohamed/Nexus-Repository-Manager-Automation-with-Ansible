@@ -1,0 +1,31 @@
+---
+- name: Configure nexus.rc (run_as_user)
+  ansible.builtin.template:
+    src: nexus.rc.j2
+    dest: "{{ nexus_home }}/bin/nexus.rc"
+    owner: "{{ nexus_user }}"
+    group: "{{ nexus_group }}"
+    mode: "0644"
+
+- name: Configure nexus.vmoptions (dynamic JVM memory)
+  ansible.builtin.template:
+    src: nexus.vmoptions.j2
+    dest: "{{ nexus_home }}/bin/nexus.vmoptions"
+    owner: "{{ nexus_user }}"
+    group: "{{ nexus_group }}"
+    mode: "0644"
+  notify: Restart Nexus
+
+- name: Set dynamic HTTP port (preserves all other stock properties)
+  ansible.builtin.lineinfile:
+    path: "{{ nexus_home }}/etc/nexus-default.properties"
+    regexp: "^application-port="
+    line: "application-port={{ nexus_port }}"
+  notify: Restart Nexus
+
+- name: Ensure Nexus listens on all interfaces
+  ansible.builtin.lineinfile:
+    path: "{{ nexus_home }}/etc/nexus-default.properties"
+    regexp: "^application-host="
+    line: "application-host=0.0.0.0"
+  notify: Restart Nexus

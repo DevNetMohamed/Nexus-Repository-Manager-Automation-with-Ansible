@@ -1,0 +1,5 @@
+# Managed by Ansible — dynamic port configuration
+application-port={{ nexus_port }}
+application-host=0.0.0.0
+nexus-context-path=/
+nexus-args=${jetty.etc}/jetty.xml,${jetty.etc}/jetty-http.xml,${jetty.etc}/jetty-requestlog.xml
