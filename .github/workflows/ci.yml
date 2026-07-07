@@ -64,6 +64,12 @@ jobs:
           echo "===== meta/main.yml ====="
           cat meta/main.yml
 
+      - name: Debug Ansible
+        working-directory: nexus
+        run: |
+          ansible --version
+          ansible-config dump | grep ROLES_PATH
+
       - name: Run Molecule test
         working-directory: nexus
         run: molecule test
