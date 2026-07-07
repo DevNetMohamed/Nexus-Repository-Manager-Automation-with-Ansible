@@ -1,8 +1,10 @@
 ---
 dependency:
   name: galaxy
+
 driver:
   name: docker
+
 platforms:
   - name: nexus-ubuntu2404
     image: "geerlingguy/docker-ubuntu2404-ansible:latest"
@@ -12,14 +14,21 @@ platforms:
     cgroupns_mode: host
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
+
 provisioner:
   name: ansible
+  role_name_check: false
+  env:
+    ANSIBLE_ROLES_PATH: "../../"
+
   playbooks:
     converge: converge.yml
     verify: verify.yml
+
   inventory:
     host_vars:
       nexus-ubuntu2404:
         nexus_port: 8081
+
 verifier:
   name: ansible
