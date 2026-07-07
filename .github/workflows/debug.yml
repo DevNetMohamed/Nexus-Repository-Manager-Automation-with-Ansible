@@ -1,0 +1,80 @@
+---
+name: Molecule Debug
+
+on:
+    workflow_dispatch:
+
+jobs:
+    debug:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install ansible molecule molecule-plugins[docker] docker
+
+            - name: Install collections
+              working-directory: nexus
+              run: |
+                  ansible-galaxy collection install -r ../collections/requirements.yml
+
+            - name: Show project structure
+              working-directory: nexus
+              run: |
+                  pwd
+                  echo "===== FILES ====="
+                  find . -maxdepth 3 -type f | sort
+
+            - name: Show Ansible config
+              working-directory: nexus
+              run: |
+                  ansible --version
+                  ansible-config dump | grep ROLES_PATH || true
+
+            - name: Run Molecule (Debug)
+              working-directory: nexus
+              run: |
+                  molecule --debug converge
+              continue-on-error: true
+
+            - name: Inspect Docker container
+              if: always()
+              run: |
+                  docker ps -a
+
+                  CONTAINER=$(docker ps -aq | head -n1)
+
+                  echo "===== OS ====="
+                  docker exec "$CONTAINER" cat /etc/os-release || true
+
+                  echo "===== Java ====="
+                  docker exec "$CONTAINER" java -version || true
+
+                  echo "===== OpenJDK Policy ====="
+                  docker exec "$CONTAINER" apt-cache policy openjdk-17-jdk || true
+
+                  echo "===== DPKG Audit ====="
+                  docker exec "$CONTAINER" dpkg --audit || true
+
+                  echo "===== Broken Packages ====="
+                  docker exec "$CONTAINER" apt-get -f install -y || true
+
+                  echo "===== DPKG Log ====="
+                  docker exec "$CONTAINER" tail -100 /var/log/dpkg.log || true
+
+                  echo "===== Installed Java ====="
+                  docker exec "$CONTAINER" dpkg -l | grep openjdk || true
+
+            - name: Destroy Molecule
+              if: always()
+              working-directory: nexus
+              run: |
+                  molecule destroy || true
