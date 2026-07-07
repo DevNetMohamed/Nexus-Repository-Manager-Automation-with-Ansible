@@ -10,24 +10,24 @@ name: CI
 jobs:
   lint:
     runs-on: ubuntu-latest
-    # steps:
-    #   - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-    #   - name: Set up Python
-    #     uses: actions/setup-python@v5
-    #     with:
-    #       python-version: "3.12"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-    #   - name: Install ansible-lint
-    #     run: pip install ansible-lint yamllint
+      - name: Install ansible-lint
+        run: pip install ansible-lint yamllint
 
-    #   - name: Run yamllint
-    #     run: |
-    #       set -x
-    #       yamllint -f parsable .
+      - name: Run yamllint
+        run: |
+          set -x
+          yamllint -f parsable .
 
-    #   - name: Run ansible-lint
-    #     run: ansible-lint
+      - name: Run ansible-lint
+        run: ansible-lint
 
   molecule:
     runs-on: ubuntu-latest
@@ -87,9 +87,9 @@ jobs:
           docker exec "$CONTAINER" cat /var/log/dpkg.log || true
           docker exec "$CONTAINER" apt-cache policy openjdk-17-jdk || true
 
-      # - name: Run Molecule test
-      #   working-directory: nexus
-      #   run: molecule test
-      #   env:
-      #     PY_COLORS: "1"
-      #     ANSIBLE_FORCE_COLOR: "1"
+      - name: Run Molecule test
+        working-directory: nexus
+        run: molecule test
+        env:
+          PY_COLORS: "1"
+          ANSIBLE_FORCE_COLOR: "1"

@@ -1,5 +1,11 @@
 ---
-- name: Install Java 17 (required by Nexus 3.x)
+- name: Ensure man directory exists
+  ansible.builtin.file:
+    path: /usr/share/man/man1
+    state: directory
+    mode: "0755"
+
+- name: Install Java 17
   ansible.builtin.apt:
     name: openjdk-17-jdk
     state: present
