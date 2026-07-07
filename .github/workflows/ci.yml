@@ -6,6 +6,7 @@ name: CI
     branches: [master]
   pull_request:
     branches: [master]
+  workflow_dispatch: {}
 
 jobs:
   lint:
@@ -27,6 +28,7 @@ jobs:
           yamllint -f parsable .
 
       - name: Run ansible-lint
+        working-directory: nexus
         run: ansible-lint
 
   molecule:
@@ -47,45 +49,6 @@ jobs:
       - name: Install Ansible collections
         working-directory: nexus
         run: ansible-galaxy collection install -r ../collections/requirements.yml
-
-      - name: Debug Molecule configuration
-        working-directory: nexus
-        run: |
-          pwd
-          echo "===== FILES ====="
-          find . -maxdepth 3 -type f | sort
-          echo
-          echo "===== converge.yml ====="
-          cat molecule/default/converge.yml
-          echo
-          echo "===== molecule.yml ====="
-          cat molecule/default/molecule.yml
-          echo
-          echo "===== meta/main.yml ====="
-          cat meta/main.yml
-
-      - name: Debug Ansible
-        working-directory: nexus
-        run: |
-          ansible --version
-          ansible-config dump | grep ROLES_PATH
-
-      - name: Run Molecule test
-        working-directory: nexus
-        run: molecule --debug converge
-
-      - name: Run Molecule converge
-        working-directory: nexus
-        run: molecule converge --debug
-        continue-on-error: true
-
-      - name: Show dpkg log
-        if: always()
-        run: |
-          docker ps -a
-          CONTAINER=$(docker ps -aq | head -n1)
-          docker exec "$CONTAINER" cat /var/log/dpkg.log || true
-          docker exec "$CONTAINER" apt-cache policy openjdk-17-jdk || true
 
       - name: Run Molecule test
         working-directory: nexus

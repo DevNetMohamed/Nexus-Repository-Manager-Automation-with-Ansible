@@ -1,8 +1,8 @@
 ---
 name: Molecule Debug
 
-on:
-    workflow_dispatch:
+"on":
+    workflow_dispatch: {}
 
 jobs:
     debug:
@@ -49,27 +49,19 @@ jobs:
               if: always()
               run: |
                   docker ps -a
-
                   CONTAINER=$(docker ps -aq | head -n1)
-
                   echo "===== OS ====="
                   docker exec "$CONTAINER" cat /etc/os-release || true
-
                   echo "===== Java ====="
                   docker exec "$CONTAINER" java -version || true
-
                   echo "===== OpenJDK Policy ====="
                   docker exec "$CONTAINER" apt-cache policy openjdk-17-jdk || true
-
                   echo "===== DPKG Audit ====="
                   docker exec "$CONTAINER" dpkg --audit || true
-
                   echo "===== Broken Packages ====="
                   docker exec "$CONTAINER" apt-get -f install -y || true
-
                   echo "===== DPKG Log ====="
                   docker exec "$CONTAINER" tail -100 /var/log/dpkg.log || true
-
                   echo "===== Installed Java ====="
                   docker exec "$CONTAINER" dpkg -l | grep openjdk || true
 
