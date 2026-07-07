@@ -48,6 +48,22 @@ jobs:
         working-directory: nexus
         run: ansible-galaxy collection install -r ../collections/requirements.yml
 
+      - name: Debug Molecule configuration
+        working-directory: nexus
+        run: |
+          pwd
+          echo "===== FILES ====="
+          find . -maxdepth 3 -type f | sort
+          echo
+          echo "===== converge.yml ====="
+          cat molecule/default/converge.yml
+          echo
+          echo "===== molecule.yml ====="
+          cat molecule/default/molecule.yml
+          echo
+          echo "===== meta/main.yml ====="
+          cat meta/main.yml
+
       - name: Run Molecule test
         working-directory: nexus
         run: molecule test
