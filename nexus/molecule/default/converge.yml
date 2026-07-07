@@ -4,7 +4,5 @@
   become: true
   vars:
     nexus_admin_password: "Admin@123456"
-  tasks:
-    - name: Include nexus role
-      ansible.builtin.include_role:
-        name: nexus
+  roles:
+    - role: nexus
